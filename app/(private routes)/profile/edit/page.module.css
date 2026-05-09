@@ -1,0 +1,78 @@
+.mainContent {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.profileCard {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+}
+
+.formTitle {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+.avatarWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+}
+
+.avatar {
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.profileInfo {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.usernameWrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.85rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.saveButton {
+  background: #111827;
+  color: #fff;
+}
+
+.cancelButton {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.error {
+  color: #dc2626;
+  min-height: 1.2rem;
+}
