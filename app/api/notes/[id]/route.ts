@@ -1,15 +1,23 @@
-import { forwardRequest } from "@/app/api/_helpers";
+import { NextRequest } from "next/server";
+import { forwardRequest } from "../../_helpers";
 
-export async function GET(req: Request) {
-  return forwardRequest(
-    req,
-    "/notes" + new URL(req.url).pathname.split("/notes")[1],
-  );
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  return forwardRequest(req, `/notes/${params.id}`);
 }
 
-export async function DELETE(req: Request) {
-  return forwardRequest(
-    req,
-    "/notes" + new URL(req.url).pathname.split("/notes")[1],
-  );
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  return forwardRequest(req, `/notes/${params.id}`);
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  return forwardRequest(req, `/notes/${params.id}`);
 }

@@ -1,49 +1,33 @@
-const BACKEND_URL = "https://notehub-api.goit.study";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function forwardRequest(req: Request, path: string) {
-  const incoming = new URL(req.url);
-  const search = incoming.search || "";
-  const url = `${BACKEND_URL}${path}${search}`;
+export async function forwardRequest(req: NextRequest, path: string) {
+  try {
+    const url = new URL(req.url);
+    const targetUrl = `https://notehub-api.goit.study${path}${url.search}`;
 
-  const headers = new Headers();
-  req.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "host") {
-      return;
-    }
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers: {
+        ...Object.fromEntries(req.headers),
+        host: new URL(targetUrl).host,
+      },
+      body:
+        req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
+    });
 
-    if (key.toLowerCase() === "content-length") {
-      return;
-    }
+    const body = await response.text();
 
-    headers.set(key, value);
-  });
-
-  const response = await fetch(url, {
-    method: req.method,
-    headers,
-    body:
-      req.method === "GET" || req.method === "HEAD"
-        ? undefined
-        : await req.text(),
-  });
-
-  const responseHeaders = new Headers();
-  response.headers.forEach((value, key) => {
-    if (key.toLowerCase() === "set-cookie") {
-      responseHeaders.append("set-cookie", value);
-      return;
-    }
-
-    if (key.toLowerCase() === "content-length") {
-      return;
-    }
-
-    responseHeaders.set(key, value);
-  });
-
-  const text = await response.text();
-  return new Response(text, {
-    status: response.status,
-    headers: responseHeaders,
-  });
+    return new NextResponse(body, {
+      status: response.status,
+      headers: {
+        ...Object.fromEntries(response.headers),
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "access-control-allow-headers": "*",
+      },
+    });
+  } catch (error) {
+    console.error("API proxy error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }
