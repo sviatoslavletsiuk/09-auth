@@ -16,7 +16,7 @@
     "formik": "^2.4.9",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^1.11.0",
-    "next": "15.2.4",
+    "next": "15.2.8",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-paginate": "^8.3.0",
