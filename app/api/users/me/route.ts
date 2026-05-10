@@ -1,66 +1,44 @@
+import api from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = cookies().toString();
+    const response = await api.get("/users/me");
 
-    const targetUrl = "https://notehub-api.goit.study/users/me";
-
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: cookieHeader,
-      },
-    });
-
-    const body = await response.text();
-
-    console.log(`GET /api/users/me - ${response.status}`);
-
-    return new NextResponse(body, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch user" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
-    const cookieHeader = cookies().toString();
-    const body = await req.text();
+    const body = await request.json();
+    const response = await api.patch("/users/me", body);
 
-    const targetUrl = "https://notehub-api.goit.study/users/me";
-
-    const response = await fetch(targetUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: cookieHeader,
-      },
-      body,
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`PATCH /api/users/me - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to update user" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

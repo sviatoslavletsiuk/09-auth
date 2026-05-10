@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AuthLayoutClient({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;

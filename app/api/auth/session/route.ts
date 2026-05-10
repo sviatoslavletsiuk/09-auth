@@ -1,34 +1,48 @@
+import api from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = cookies().toString();
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    const targetUrl = "https://notehub-api.goit.study/auth/session";
+    if (!accessToken) {
+      if (refreshToken) {
+        // try to refresh
+        const refreshResponse = await api.post("/auth/refresh", {
+          refreshToken,
+        });
+        const setCookieHeader = refreshResponse.headers["set-cookie"];
+        if (setCookieHeader) {
+          const cookieStrings = Array.isArray(setCookieHeader)
+            ? setCookieHeader
+            : [setCookieHeader];
+          for (const cookieStr of cookieStrings) {
+            const [nameValue] = cookieStr.split(";");
+            const [name, value] = nameValue.split("=");
+            cookieStore.set(name, value);
+          }
+        }
+        return NextResponse.json({ success: true }, { status: 200 });
+      }
+      return NextResponse.json({ success: false }, { status: 401 });
+    }
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        cookie: cookieHeader,
-      },
-    });
-
-    const body = await response.text();
-
-    console.log(`GET /api/auth/session - ${response.status}`);
-
-    return new NextResponse(body, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // check session
+    const response = await api.get("/auth/session");
+    return NextResponse.json({ success: true }, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { success: false },
+        { status: error.response?.status || 401 },
+      );
+    }
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }
