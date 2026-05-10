@@ -1,5 +1,7 @@
 import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
 import AuthProvider from "@/components/AuthProvider/AuthProvider";
+import Header from "@/components/Header/Header";
+import Footer from "@/components/Footer/Footer";
 
 export default function RootLayout({
   children,
@@ -11,7 +13,9 @@ export default function RootLayout({
       <body>
         <TanStackProvider>
           <AuthProvider>
+            <Header />
             <main>{children}</main>
+            <Footer />
           </AuthProvider>
         </TanStackProvider>
       </body>

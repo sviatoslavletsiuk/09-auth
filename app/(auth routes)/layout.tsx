@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AuthLayoutClient from "./AuthLayoutClient";
 
 export const metadata: Metadata = {
   title: "Authentication - NoteHub",
@@ -9,5 +10,5 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AuthLayoutClient>{children}</AuthLayoutClient>;
 }

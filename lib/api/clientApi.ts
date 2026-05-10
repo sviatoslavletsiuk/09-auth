@@ -17,15 +17,11 @@ export const fetchNotes = async (
   perPage: number = 12,
   tag: string = "all",
 ): Promise<NotesResponse> => {
-  const { data } = await api.get<Note[]>("/notes", {
+  const { data } = await api.get<NotesResponse>("/notes", {
     params: { search, page, perPage, tag },
   });
 
-  return {
-    notes: data,
-    totalPages: 1,
-    total: data.length,
-  };
+  return data;
 };
 
 export const fetchNoteById = async (id: string): Promise<Note> => {

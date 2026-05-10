@@ -1,4 +1,5 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import { cookies } from "next/headers";
 import { Note, CreateNoteDto, NotesResponse } from "@/types/note";
 import { User } from "@/types/user";
 
@@ -16,13 +17,14 @@ interface ServerApiOptions {
   cookies?: string;
 }
 
-const createHeaders = (cookies?: string) => {
+const createHeaders = (cookiesHeader?: string) => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  if (cookies) {
-    headers.cookie = cookies;
+  const cookieValue = cookiesHeader ?? cookies().toString();
+  if (cookieValue) {
+    headers.cookie = cookieValue;
   }
 
   return headers;
@@ -35,16 +37,12 @@ export const fetchNotes = async (
   tag: string = "all",
   options: ServerApiOptions = {},
 ): Promise<NotesResponse> => {
-  const { data } = await serverApi.get<Note[]>("/notes", {
+  const { data } = await serverApi.get<NotesResponse>("/notes", {
     params: { search, page, perPage, tag },
     headers: createHeaders(options.cookies),
   });
 
-  return {
-    notes: data,
-    totalPages: 1,
-    total: data.length,
-  };
+  return data;
 };
 
 export const fetchNoteById = async (
@@ -66,13 +64,13 @@ export const getMe = async (options: ServerApiOptions = {}): Promise<User> => {
 
 export const checkSession = async (
   options: ServerApiOptions = {},
-): Promise<User | null> => {
+): Promise<AxiosResponse<User> | null> => {
   try {
     const response = await serverApi.get<User>("/auth/session", {
       headers: createHeaders(options.cookies),
     });
 
-    return response.data || null;
+    return response;
   } catch {
     return null;
   }

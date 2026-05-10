@@ -1,6 +1,20 @@
-import api from "../../lib/api/api";
+import axios from "axios";
 import { Note, CreateNoteDto, NotesResponse } from "../../types/note";
 import { User } from "../../types/user";
+
+const baseURL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : "/api";
+
+const api = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export default api;
 
 export interface AuthPayload {
   email: string;
@@ -17,15 +31,11 @@ export const fetchNotes = async (
   perPage: number = 12,
   tag: string = "all",
 ): Promise<NotesResponse> => {
-  const { data } = await api.get<Note[]>("/notes", {
+  const { data } = await api.get<NotesResponse>("/notes", {
     params: { search, page, perPage, tag },
   });
 
-  return {
-    notes: data,
-    totalPages: 1,
-    total: data.length,
-  };
+  return data;
 };
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
