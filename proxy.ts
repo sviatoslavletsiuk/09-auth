@@ -13,6 +13,6 @@ export async function proxy({
 }: ProxyOptions) {
   // Session check is handled by AuthProvider in client
   // This is just a server-side helper for redirects
-  
+
   return { user: null };
 }
