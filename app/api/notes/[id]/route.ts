@@ -1,4 +1,5 @@
-import api from "@/lib/api/api";
+import { backendApi, logErrorResponse } from "@/lib/api/backendApi";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 
@@ -10,10 +11,17 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const response = await api.get(`/notes/${id}`);
+    const cookieHeader = cookies().toString();
+
+    const response = await backendApi.get(`/notes/${id}`, {
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || "Failed to fetch note" },
@@ -34,10 +42,17 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const response = await api.patch(`/notes/${id}`, body);
+    const cookieHeader = cookies().toString();
+
+    const response = await backendApi.patch(`/notes/${id}`, body, {
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || "Failed to update note" },
@@ -57,10 +72,17 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const response = await api.delete(`/notes/${id}`);
+    const cookieHeader = cookies().toString();
+
+    const response = await backendApi.delete(`/notes/${id}`, {
+      headers: {
+        cookie: cookieHeader,
+      },
+    });
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || "Failed to delete note" },

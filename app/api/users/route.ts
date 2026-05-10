@@ -1,34 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
+import { backendApi, logErrorResponse } from "@/lib/api/backendApi";
 import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const cookieHeader = cookies().toString();
-
-    const targetUrl = "https://notehub-api.goit.study/users";
-
-    const response = await fetch(targetUrl, {
-      method: "GET",
+    const response = await backendApi.get("/users", {
       headers: {
-        "Content-Type": "application/json",
         cookie: cookieHeader,
       },
     });
 
-    const body = await response.text();
-
-    console.log(`GET /api/users - ${response.status}`);
-
-    return new NextResponse(body, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    logErrorResponse(error);
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch users" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

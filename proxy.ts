@@ -1,41 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import api from "@/lib/api/api";
+import { cookies } from "next/headers";
+import { checkSession } from "@/lib/api/serverApi";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const cookieStore = request.cookies;
-  const accessToken = cookieStore.get("accessToken")?.value;
-  const refreshToken = cookieStore.get("refreshToken")?.value;
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
 
   if (pathname.startsWith("/profile") || pathname.startsWith("/notes")) {
-    if (!accessToken) {
-      if (refreshToken) {
-        try {
-          // try to refresh session
-          const refreshResponse = await api.post("/auth/refresh", {
-            refreshToken,
-          });
-          const setCookieHeader = refreshResponse.headers["set-cookie"];
-          if (setCookieHeader) {
-            const response = NextResponse.next();
-            const cookieStrings = Array.isArray(setCookieHeader)
-              ? setCookieHeader
-              : [setCookieHeader];
-            for (const cookieStr of cookieStrings) {
-              response.headers.append("Set-Cookie", cookieStr);
-            }
-            return response;
-          }
-        } catch {
-          return NextResponse.redirect(new URL("/sign-in", request.url));
-        }
-      }
+    const session = await checkSession({ cookies: cookieHeader });
+    if (!session) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
   }
 
   if (pathname === "/sign-in" || pathname === "/sign-up") {
-    if (accessToken) {
+    const session = await checkSession({ cookies: cookieHeader });
+    if (session?.status === 200) {
       return NextResponse.redirect(new URL("/profile", request.url));
     }
   }
