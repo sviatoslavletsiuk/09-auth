@@ -1,45 +1,31 @@
-import {
-  backendApi,
-  logErrorResponse,
-  setResponseCookies,
-} from "@/lib/api/backendApi";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const cookieHeader = cookies().toString();
-    const response = await backendApi.post(
-      "/auth/logout",
-      {},
-      {
-        headers: {
-          cookie: cookieHeader,
-        },
-      },
-    );
+    const targetUrl = "https://notehub-api.goit.study/auth/logout";
 
-    const nextResponse = NextResponse.json(response.data, {
-      status: response.status,
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        Cookie: req.headers.get("cookie") || "",
+      },
     });
 
-    setResponseCookies(nextResponse, response.headers["set-cookie"]);
+    const responseBody = await response.text();
 
-    return nextResponse;
+    console.log(`POST /api/auth/logout - ${response.status}`);
+
+    return new NextResponse(responseBody, {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": response.headers.get("set-cookie") || "",
+      },
+    });
   } catch (error) {
-    logErrorResponse(error);
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || "Logout failed" },
-        { status: error.response?.status || 500 },
-      );
-    }
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
-    );
+    console.error("API proxy error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

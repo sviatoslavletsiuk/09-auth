@@ -21,8 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProfilePage() {
-  const cookieHeader = cookies().toString();
-  const user = await getMe({ cookies: cookieHeader });
+  const user = await getMe();
 
   return (
     <main className={css.mainContent}>
