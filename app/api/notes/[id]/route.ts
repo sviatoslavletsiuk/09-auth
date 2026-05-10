@@ -1,100 +1,97 @@
+import { backendApi, logErrorResponse } from "@/lib/api/backendApi";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
+    const cookieHeader = cookies().toString();
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
+    const response = await backendApi.get(`/notes/${id}`, {
       headers: {
-        Cookie: req.headers.get("cookie") || "",
+        cookie: cookieHeader,
       },
     });
 
-    const responseBody = await response.text();
-
-    console.log(`GET /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    logErrorResponse(error);
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function PATCH(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const body = await req.text();
+    const body = await request.json();
+    const cookieHeader = cookies().toString();
 
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
-
-    const response = await fetch(targetUrl, {
-      method: "PATCH",
+    const response = await backendApi.patch(`/notes/${id}`, body, {
       headers: {
-        "Content-Type": "application/json",
-        Cookie: req.headers.get("cookie") || "",
-      },
-      body,
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`PATCH /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
+        cookie: cookieHeader,
       },
     });
+
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    logErrorResponse(error);
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to update note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
+    const cookieHeader = cookies().toString();
 
-    const response = await fetch(targetUrl, {
-      method: "DELETE",
+    const response = await backendApi.delete(`/notes/${id}`, {
       headers: {
-        Cookie: req.headers.get("cookie") || "",
+        cookie: cookieHeader,
       },
     });
 
-    const responseBody = await response.text();
-
-    console.log(`DELETE /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    logErrorResponse(error);
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to delete note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
