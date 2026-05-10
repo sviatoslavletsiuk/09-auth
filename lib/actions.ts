@@ -1,4 +1,4 @@
-import { createNote } from "./api";
+import { createNote } from "./api/clientApi";
 import { redirect } from "next/navigation";
 import { NoteTag } from "@/types/note";
 
