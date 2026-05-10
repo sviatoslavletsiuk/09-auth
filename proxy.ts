@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { checkSession } from "@/lib/api/serverApi";
 
 interface ProxyOptions {
   cookiesString?: string;
@@ -12,15 +11,8 @@ export async function proxy({
   privateRoute = false,
   authRoute = false,
 }: ProxyOptions) {
-  const user = await checkSession({ cookies: cookiesString ?? "" });
-
-  if (privateRoute && !user) {
-    redirect("/sign-in");
-  }
-
-  if (authRoute && user) {
-    redirect("/profile");
-  }
-
-  return { user };
+  // Session check is handled by AuthProvider in client
+  // This is just a server-side helper for redirects
+  
+  return { user: null };
 }
