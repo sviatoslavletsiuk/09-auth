@@ -1,63 +1,48 @@
+import { api } from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const searchParams = new URLSearchParams(url.search);
-    const targetUrl = `https://notehub-api.goit.study/notes?${searchParams.toString()}`;
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+    const params = Object.fromEntries(searchParams.entries());
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
-    });
+    const response = await api.get("/notes", { params });
 
-    const responseBody = await response.text();
-
-    console.log(`GET /api/notes - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch notes" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.text();
+    const body = await request.json();
+    const response = await api.post("/notes", body);
 
-    const targetUrl = "https://notehub-api.goit.study/notes";
-
-    const response = await fetch(targetUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: req.headers.get("cookie") || "",
-      },
-      body,
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`POST /api/notes - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to create note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

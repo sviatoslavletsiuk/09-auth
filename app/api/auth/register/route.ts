@@ -1,34 +1,39 @@
+import { api } from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.text();
+    const body = await request.json();
+    const response = await api.post("/auth/register", body);
 
-    const targetUrl = "https://notehub-api.goit.study/auth/register";
+    const setCookieHeader = response.headers["set-cookie"];
+    if (setCookieHeader) {
+      const cookieStore = await cookies();
+      const cookieStrings = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : [setCookieHeader];
+      for (const cookieStr of cookieStrings) {
+        const [nameValue] = cookieStr.split(";");
+        const [name, value] = nameValue.split("=");
+        cookieStore.set(name, value);
+      }
+    }
 
-    const response = await fetch(targetUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body,
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`POST /api/auth/register - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-        "Set-Cookie": response.headers.get("set-cookie") || "",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Registration failed" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

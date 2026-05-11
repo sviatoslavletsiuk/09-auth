@@ -1,30 +1,23 @@
+import { api } from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const targetUrl = "https://notehub-api.goit.study/auth/me";
-
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`GET /api/auth/me - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await api.get("/auth/me");
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch auth/me" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

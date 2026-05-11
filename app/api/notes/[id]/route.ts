@@ -1,100 +1,75 @@
+import { api } from "@/lib/api/api";
 import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
+    const response = await api.get(`/notes/${id}`);
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`GET /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function PATCH(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const body = await req.text();
+    const body = await request.json();
+    const response = await api.patch(`/notes/${id}`, body);
 
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
-
-    const response = await fetch(targetUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: req.headers.get("cookie") || "",
-      },
-      body,
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`PATCH /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to update note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
+    const response = await api.delete(`/notes/${id}`);
 
-    const response = await fetch(targetUrl, {
-      method: "DELETE",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
-    });
-
-    const responseBody = await response.text();
-
-    console.log(`DELETE /api/notes/${id} - ${response.status}`);
-
-    return new NextResponse(responseBody, {
-      status: response.status,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error("API proxy error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to delete note" },
+        { status: error.response?.status || 500 },
+      );
+    }
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
