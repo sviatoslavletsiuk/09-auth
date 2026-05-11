@@ -1,43 +1,31 @@
-import {
-  backendApi,
-  logErrorResponse,
-  setResponseCookies,
-} from "@/lib/api/backendApi";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const cookieHeader = cookies().toString();
-    const response = await backendApi.get("/auth/session", {
+    const targetUrl = "https://notehub-api.goit.study/auth/session";
+
+    const response = await fetch(targetUrl, {
+      method: "GET",
       headers: {
-        cookie: cookieHeader,
+        Cookie: req.headers.get("cookie") || "",
       },
     });
 
-    const nextResponse = NextResponse.json(response.data, {
+    const responseBody = await response.text();
+
+    console.log(`GET /api/auth/session - ${response.status}`);
+
+    return new NextResponse(responseBody, {
       status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": response.headers.get("set-cookie") || "",
+      },
     });
-
-    setResponseCookies(nextResponse, response.headers["set-cookie"]);
-
-    return nextResponse;
   } catch (error) {
-    logErrorResponse(error);
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        {
-          message: error.response?.data?.message || "Unable to verify session",
-        },
-        { status: error.response?.status || 401 },
-      );
-    }
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
-    );
+    console.error("API proxy error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

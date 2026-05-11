@@ -1,36 +1,34 @@
-import {
-  backendApi,
-  logErrorResponse,
-  setResponseCookies,
-} from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
-import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const response = await backendApi.post("/auth/register", body);
+    const body = await req.text();
 
-    const nextResponse = NextResponse.json(response.data, {
-      status: response.status,
+    const targetUrl = "https://notehub-api.goit.study/auth/register";
+
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
     });
 
-    setResponseCookies(nextResponse, response.headers["set-cookie"]);
+    const responseBody = await response.text();
 
-    return nextResponse;
+    console.log(`POST /api/auth/register - ${response.status}`);
+
+    return new NextResponse(responseBody, {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": response.headers.get("set-cookie") || "",
+      },
+    });
   } catch (error) {
-    logErrorResponse(error);
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || "Registration failed" },
-        { status: error.response?.status || 500 },
-      );
-    }
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
-    );
+    console.error("API proxy error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
