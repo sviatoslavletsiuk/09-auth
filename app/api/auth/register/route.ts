@@ -16,10 +16,35 @@ export async function POST(request: NextRequest) {
       const cookieStrings = Array.isArray(setCookieHeader)
         ? setCookieHeader
         : [setCookieHeader];
+
       for (const cookieStr of cookieStrings) {
-        const [nameValue] = cookieStr.split(";");
-        const [name, value] = nameValue.split("=");
-        cookieStore.set(name, value);
+        const parts = cookieStr.split(";");
+        const [name, value] = parts[0].split("=");
+
+        const options: any = {};
+
+        for (let i = 1; i < parts.length; i++) {
+          const attr = parts[i].trim();
+          const [attrName, attrValue] = attr.split("=");
+
+          if (attrName.toLowerCase() === "path") {
+            options.path = attrValue;
+          } else if (attrName.toLowerCase() === "max-age") {
+            options.maxAge = parseInt(attrValue, 10);
+          } else if (attrName.toLowerCase() === "expires") {
+            options.expires = new Date(attrValue);
+          } else if (attrName.toLowerCase() === "domain") {
+            options.domain = attrValue;
+          } else if (attrName.toLowerCase() === "secure") {
+            options.secure = true;
+          } else if (attrName.toLowerCase() === "httponly") {
+            options.httpOnly = true;
+          } else if (attrName.toLowerCase() === "samesite") {
+            options.sameSite = attrValue as "strict" | "lax" | "none";
+          }
+        }
+
+        cookieStore.set(name.trim(), value.trim(), options);
       }
     }
 
