@@ -1,6 +1,8 @@
+import { api } from "@/lib/api/api";
 import { logErrorResponse } from "@/lib/api/backendApi";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { isAxiosError } from "axios";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -12,30 +14,22 @@ export async function GET(
     const { id } = await params;
     const cookieHeader = (await cookies()).toString();
 
-    const response = await fetch(`https://notehub-api.goit.study/notes/${id}`, {
-      method: "GET",
+    const response = await api.get(`/notes/${id}`, {
       headers: {
         Cookie: cookieHeader,
-        Accept: "application/json",
       },
-      cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          message:
-            data?.message || data?.error?.message || "Failed to fetch note",
-        },
-        { status: response.status },
-      );
-    }
-
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
     logErrorResponse(error);
+
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to fetch note" },
+        { status: error.response?.status || 500 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Internal server error" },
@@ -53,32 +47,23 @@ export async function PATCH(
     const body = await request.json();
     const cookieHeader = (await cookies()).toString();
 
-    const response = await fetch(`https://notehub-api.goit.study/notes/${id}`, {
-      method: "PATCH",
+    const response = await api.patch(`/notes/${id}`, body, {
       headers: {
-        Cookie: cookieHeader,
         "Content-Type": "application/json",
-        Accept: "application/json",
+        Cookie: cookieHeader,
       },
-      body: JSON.stringify(body),
-      cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          message:
-            data?.message || data?.error?.message || "Failed to update note",
-        },
-        { status: response.status },
-      );
-    }
-
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
     logErrorResponse(error);
+
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to update note" },
+        { status: error.response?.status || 500 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Internal server error" },
@@ -95,30 +80,22 @@ export async function DELETE(
     const { id } = await params;
     const cookieHeader = (await cookies()).toString();
 
-    const response = await fetch(`https://notehub-api.goit.study/notes/${id}`, {
-      method: "DELETE",
+    const response = await api.delete(`/notes/${id}`, {
       headers: {
         Cookie: cookieHeader,
-        Accept: "application/json",
       },
-      cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          message:
-            data?.message || data?.error?.message || "Failed to delete note",
-        },
-        { status: response.status },
-      );
-    }
-
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
     logErrorResponse(error);
+
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || "Failed to delete note" },
+        { status: error.response?.status || 500 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Internal server error" },

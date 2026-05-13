@@ -1,6 +1,8 @@
+import { api } from "@/lib/api/api";
 import { logErrorResponse } from "@/lib/api/backendApi";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { isAxiosError } from "axios";
 
 export const dynamic = "force-dynamic";
 
@@ -22,43 +24,33 @@ export async function GET(request: NextRequest) {
     const rawTag = getQueryValue(url, "tag") ?? "";
     const tag = rawTag === "All" ? "" : rawTag;
 
+    const cookieHeader = (await cookies()).toString();
+
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (Number.isFinite(page)) params.set("page", String(page));
     if (Number.isFinite(perPage)) params.set("perPage", String(perPage));
     if (tag) params.set("tag", tag);
 
-    const cookieHeader = (await cookies()).toString();
-
-    const targetUrl = `https://notehub-api.goit.study/notes${
-      params.toString() ? `?${params.toString()}` : ""
-    }`;
-
-    const response = await fetch(targetUrl, {
-      method: "GET",
+    const response = await api.get("/notes", {
+      params: Object.fromEntries(params.entries()),
       headers: {
         Cookie: cookieHeader,
-        // важливо для узгодження з бекендом
-        Accept: "application/json",
       },
-      cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          message:
-            data?.message || data?.error?.message || "Failed to fetch notes",
-        },
-        { status: response.status },
-      );
-    }
-
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
     logErrorResponse(error);
+
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        {
+          message: error.response?.data?.message || "Failed to fetch notes",
+        },
+        { status: error.response?.status || 500 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Internal server error" },
@@ -70,34 +62,26 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
     const cookieHeader = (await cookies()).toString();
 
-    const response = await fetch(`https://notehub-api.goit.study/notes`, {
-      method: "POST",
+    const response = await api.post("/notes", body, {
       headers: {
-        Cookie: cookieHeader,
         "Content-Type": "application/json",
-        Accept: "application/json",
+        Cookie: cookieHeader,
       },
-      body: JSON.stringify(body),
-      cache: "no-store",
     });
 
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
+    return NextResponse.json(response.data, { status: response.status });
+  } catch (error) {
+    if (isAxiosError(error)) {
       return NextResponse.json(
         {
-          message:
-            data?.message || data?.error?.message || "Failed to create note",
+          message: error.response?.data?.message || "Failed to create note",
         },
-        { status: response.status },
+        { status: error.response?.status || 500 },
       );
     }
-
-    return NextResponse.json(data, { status: response.status });
-  } catch (error) {
-    logErrorResponse(error);
 
     return NextResponse.json(
       { message: "Internal server error" },
