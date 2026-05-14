@@ -1,4 +1,4 @@
-import { api, logErrorResponse } from "@/lib/api/backendApi";
+import { api, logErrorResponse, getAuthCookies } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -13,24 +13,23 @@ export async function GET(request: NextRequest) {
 
     const search = getQueryValue(url, "search") ?? "";
     const page = Number(getQueryValue(url, "page") ?? "1");
-    const perPage = Number(getQueryValue(url, "perPage") ?? "12");
+    const perPage = 12; // Фіксовано 12 згідно з фідбеком
 
-    // В референсі: special logic для tag === 'All'
-    // Якщо tag === 'All' — параметр tag передаємо порожнім значенням.
     const rawTag = getQueryValue(url, "tag") ?? "";
     const tag = rawTag === "All" ? "" : rawTag;
 
-    const cookieHeader = (await cookies()).toString();
+    const cookieStore = await cookies();
+    const authCookies = getAuthCookies(cookieStore);
 
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (Number.isFinite(page)) params.set("page", String(page));
-    if (Number.isFinite(perPage)) params.set("perPage", String(perPage));
+    params.set("perPage", String(perPage));
     if (tag) params.set("tag", tag);
 
     const response = await api.get("/notes", {
       params: Object.fromEntries(params.entries()),
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+      headers: authCookies ? { Cookie: authCookies } : {},
     });
 
     return NextResponse.json(response.data, { status: response.status });
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.response?.status || error.status || 500 },
+      { status: error.status || 500 },
     );
   }
 }
@@ -47,10 +46,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const cookieHeader = (await cookies()).toString();
+    const cookieStore = await cookies();
+    const authCookies = getAuthCookies(cookieStore);
 
     const response = await api.post("/notes", body, {
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+      headers: authCookies ? { Cookie: authCookies } : {},
     });
 
     return NextResponse.json(response.data, { status: response.status });
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.response?.status || error.status || 500 },
+      { status: error.status || 500 },
     );
   }
 }

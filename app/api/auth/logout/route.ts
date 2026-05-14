@@ -1,14 +1,14 @@
-import { api, logErrorResponse } from "@/lib/api/backendApi";
+import { api, logErrorResponse, getAuthCookies } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function POST(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const cookieHeader = cookieStore.toString();
+    const authCookies = getAuthCookies(cookieStore);
 
     const response = await api.post("/auth/logout", null, {
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+      headers: authCookies ? { Cookie: authCookies } : {},
     });
 
     cookieStore.delete("accessToken");
@@ -19,7 +19,7 @@ export async function POST(_request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.response?.status || error.status || 500 },
+      { status: error.status || 500 },
     );
   }
 }

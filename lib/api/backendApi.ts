@@ -7,16 +7,15 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-export function logErrorResponse(error: unknown) {
-  if (isAxiosError(error)) {
-    console.error("API Error:", {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      url: error.config?.url,
-      method: error.config?.method,
-    });
-  } else {
-    console.error("Unexpected error:", error);
-  }
+export function getAuthCookies(cookieStore: any) {
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
+  const cookies = [];
+  if (accessToken) cookies.push(`accessToken=${accessToken}`);
+  if (refreshToken) cookies.push(`refreshToken=${refreshToken}`);
+  return cookies.join("; ");
+}
+
+export function logErrorResponse(data: any) {
+  console.error("API Error data:", data);
 }

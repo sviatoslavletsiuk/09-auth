@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: any) {
-    logErrorResponse(error);
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.response?.status || error.status || 500 },
+      { status: error.status || 500 },
     );
   }
 }

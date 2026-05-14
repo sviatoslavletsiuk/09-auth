@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { Note } from "@/types/note";
-import { api } from "@/lib/api/backendApi";
+import { api, getAuthCookies } from "@/lib/api/backendApi";
 import { User } from "@/types/user";
 
 export async function fetchNotes(
@@ -9,34 +9,48 @@ export async function fetchNotes(
   perPage: number,
   tag: string,
 ): Promise<{ notes: Note[]; totalPages: number }> {
-  const cookieHeader = (await cookies()).toString();
+  const cookieStore = await cookies();
+  const authCookies = getAuthCookies(cookieStore);
+
   const response = await api.get("/notes", {
-    params: { search, page, perPage, tag },
-    headers: cookieHeader ? { Cookie: cookieHeader } : {},
+    params: { search, page, perPage: 12, tag },
+    headers: authCookies ? { Cookie: authCookies } : {},
   });
   return response.data;
 }
 
-export async function checkSession(): Promise<User> {
-  const cookieHeader = (await cookies()).toString();
-  const response = await api.get("/auth/session", {
-    headers: cookieHeader ? { Cookie: cookieHeader } : {},
-  });
-  return response.data;
+export async function checkSession(): Promise<User | null> {
+  try {
+    const cookieStore = await cookies();
+    const authCookies = getAuthCookies(cookieStore);
+
+    if (!authCookies) return null;
+
+    const response = await api.get("/auth/session", {
+      headers: { Cookie: authCookies },
+    });
+    return response.data || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchNoteById(id: string): Promise<Note> {
-  const cookieHeader = (await cookies()).toString();
+  const cookieStore = await cookies();
+  const authCookies = getAuthCookies(cookieStore);
+
   const response = await api.get(`/notes/${id}`, {
-    headers: cookieHeader ? { Cookie: cookieHeader } : {},
+    headers: authCookies ? { Cookie: authCookies } : {},
   });
   return response.data;
 }
 
 export async function getMe(): Promise<User> {
-  const cookieHeader = (await cookies()).toString();
+  const cookieStore = await cookies();
+  const authCookies = getAuthCookies(cookieStore);
+
   const response = await api.get("/users/me", {
-    headers: cookieHeader ? { Cookie: cookieHeader } : {},
+    headers: authCookies ? { Cookie: authCookies } : {},
   });
   return response.data;
 }
