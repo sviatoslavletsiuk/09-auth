@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { Note } from "@/types/note";
-import { backendApi as api } from "@/lib/api/backendApi";
+import { api } from "@/lib/api/backendApi";
 import { User } from "@/types/user";
 
 export async function fetchNotes(
@@ -17,6 +17,14 @@ export async function fetchNotes(
   return response.data;
 }
 
+export async function checkSession(): Promise<User> {
+  const cookieHeader = (await cookies()).toString();
+  const response = await api.get("/auth/session", {
+    headers: { Cookie: cookieHeader },
+  });
+  return response.data;
+}
+
 export async function fetchNoteById(id: string): Promise<Note> {
   const cookieHeader = (await cookies()).toString();
   const response = await api.get(`/notes/${id}`, {
@@ -28,14 +36,6 @@ export async function fetchNoteById(id: string): Promise<Note> {
 export async function getMe(): Promise<User> {
   const cookieHeader = (await cookies()).toString();
   const response = await api.get("/users/me", {
-    headers: { Cookie: cookieHeader },
-  });
-  return response.data;
-}
-
-export async function checkSession(): Promise<User> {
-  const cookieHeader = (await cookies()).toString();
-  const response = await api.get("/auth/session", {
     headers: { Cookie: cookieHeader },
   });
   return response.data;

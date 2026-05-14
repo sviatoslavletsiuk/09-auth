@@ -1,4 +1,4 @@
-import { backendApi as api, logErrorResponse } from "@/lib/api/backendApi";
+import { api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -14,7 +14,7 @@ export async function POST(_request: NextRequest) {
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: any) {
-    logErrorResponse(error.response?.data || error.message);
+    logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
       { status: error.status || 500 },
