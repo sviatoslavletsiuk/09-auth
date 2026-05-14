@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
 
       for (const cookieStr of cookieStrings) {
         const parsed = parse(cookieStr ?? "");
-        const entry = Object.entries(parsed)[0];
+        const entry = Object.entries(parsed)[0] as [string, string] | undefined;
 
         if (entry) {
           const [name, value] = entry;
-          cookieStore.set(name, value ?? "", {
+          cookieStore.set(name, value, {
             path: parsed.Path,
             expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
             maxAge: parsed["Max-Age"]
