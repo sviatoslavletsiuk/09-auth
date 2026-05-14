@@ -16,6 +16,6 @@ export function getAuthCookies(cookieStore: any) {
   return cookies.join("; ");
 }
 
-export function logErrorResponse(data: any) {
-  console.error("API Error data:", data);
+export function logErrorResponse(error: any) {
+  console.error("API Error:", error);
 }

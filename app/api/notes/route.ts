@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const perPage = 12; // Фіксовано 12 згідно з фідбеком
 
     const rawTag = getQueryValue(url, "tag") ?? "";
-    const tag = rawTag === "All" ? "" : rawTag;
+    const tag = rawTag.toLowerCase() === "all" ? "" : rawTag;
 
     const cookieStore = await cookies();
     const authCookies = getAuthCookies(cookieStore);
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: any) {
-    logErrorResponse(error);
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
       { status: error.status || 500 },
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: any) {
-    logErrorResponse(error);
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
       { status: error.status || 500 },

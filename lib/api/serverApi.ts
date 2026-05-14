@@ -12,8 +12,13 @@ export async function fetchNotes(
   const cookieStore = await cookies();
   const authCookies = getAuthCookies(cookieStore);
 
+  const backendTag = tag.toLowerCase() === "all" ? "" : tag;
+
   const response = await api.get("/notes", {
-    params: { search, page, perPage: 12, tag },
+    params: { search, page, perPage: 12, tag: backendTag } as Record<
+      string,
+      any
+    >,
     headers: authCookies ? { Cookie: authCookies } : {},
   });
   return response.data;

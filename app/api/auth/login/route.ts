@@ -19,10 +19,18 @@ export async function POST(request: NextRequest) {
       for (const cookieStr of cookieStrings) {
         const parsed = parse(cookieStr);
         if (parsed.accessToken) {
-          cookieStore.set("accessToken", parsed.accessToken);
+          cookieStore.set("accessToken", parsed.accessToken, {
+            httpOnly: true,
+            secure: true,
+            path: "/",
+          });
         }
         if (parsed.refreshToken) {
-          cookieStore.set("refreshToken", parsed.refreshToken);
+          cookieStore.set("refreshToken", parsed.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            path: "/",
+          });
         }
       }
     }
