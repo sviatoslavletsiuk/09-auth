@@ -7,7 +7,6 @@ import {
 import { fetchNoteById } from "@/lib/api/serverApi";
 import NoteDetailsClient from "./NoteDetails.client";
 
-// В Next.js 15 params — це Promise
 export async function generateMetadata({
   params,
 }: {
@@ -41,7 +40,7 @@ export default async function NoteDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params; // Обов'язково додаємо await тут
+  const { id } = await params;
 
   const queryClient = new QueryClient();
 

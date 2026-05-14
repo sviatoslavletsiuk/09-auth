@@ -1,19 +1,22 @@
-import { api, logErrorResponse, getAuthCookies } from "@/lib/api/backendApi";
+import { api } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { parse } from "cookie";
+import { isAxiosError } from "axios";
 
 export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const authCookies = getAuthCookies(cookieStore);
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    if (!authCookies) {
-      return new NextResponse(null, { status: 200 });
+    if (!accessToken || !refreshToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const response = await api.get("/auth/session", {
-      headers: authCookies ? { Cookie: authCookies } : {},
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
     });
 
     const setCookieHeader = response.headers["set-cookie"];
@@ -23,32 +26,48 @@ export async function GET(_request: NextRequest) {
         : [setCookieHeader];
 
       for (const cookieStr of cookieStrings) {
-        const parsed = parse(cookieStr);
-        if (parsed.accessToken) {
-          cookieStore.set("accessToken", parsed.accessToken, {
-            httpOnly: true,
-            secure: true,
-            path: "/",
-          });
+        const parts = cookieStr.split(";");
+        let name = "";
+        let value = "";
+        const options: Record<string, any> = {};
+
+        const nameValuePart = parts[0].trim();
+        const eqIndex = nameValuePart.indexOf("=");
+        if (eqIndex > -1) {
+          name = nameValuePart.substring(0, eqIndex);
+          value = nameValuePart.substring(eqIndex + 1);
+        } else {
+          continue;
         }
-        if (parsed.refreshToken) {
-          cookieStore.set("refreshToken", parsed.refreshToken, {
-            httpOnly: true,
-            secure: true,
-            path: "/",
-          });
+
+        for (let i = 1; i < parts.length; i++) {
+          const part = parts[i].trim();
+          const [attrName, attrValue] = part.split("=");
+          const lowerAttrName = attrName.toLowerCase();
+
+          if (lowerAttrName === "path") options.path = attrValue;
+          else if (lowerAttrName === "expires")
+            options.expires = new Date(attrValue);
+          else if (lowerAttrName === "max-age")
+            options.maxAge = parseInt(attrValue, 10);
+          else if (lowerAttrName === "httponly") options.httpOnly = true;
+          else if (lowerAttrName === "secure") options.secure = true;
         }
+        cookieStore.set(name, value, options);
       }
     }
+
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error: any) {
-    logErrorResponse(error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      return new NextResponse(null, { status: 200 });
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return NextResponse.json(
+        { message: error.response?.data?.message || error.message },
+        { status: error.response?.status || 500 },
+      );
     }
     return NextResponse.json(
-      { error: error.message, response: error.response?.data },
-      { status: error.status || 500 },
+      { message: "Internal Server Error" },
+      { status: 500 },
     );
   }
 }

@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { Note } from "@/types/note";
-import { api, getAuthCookies } from "@/lib/api/backendApi";
+import { api } from "@/lib/api/backendApi";
 import { User } from "@/types/user";
+import { AxiosResponse } from "axios";
 
 export async function fetchNotes(
   search: string,
@@ -10,31 +11,27 @@ export async function fetchNotes(
   tag: string,
 ): Promise<{ notes: Note[]; totalPages: number }> {
   const cookieStore = await cookies();
-  const authCookies = getAuthCookies(cookieStore);
 
   const backendTag = tag.toLowerCase() === "all" ? "" : tag;
 
   const response = await api.get("/notes", {
-    params: { search, page, perPage: 12, tag: backendTag } as Record<
-      string,
-      any
-    >,
-    headers: authCookies ? { Cookie: authCookies } : {},
+    params: { search, page, perPage: 12, tag: backendTag },
+    headers: {
+      Cookie: cookieStore.toString(),
+    },
   });
   return response.data;
 }
 
-export async function checkSession(): Promise<User | null> {
+export async function checkSession(): Promise<AxiosResponse<User> | null> {
   try {
     const cookieStore = await cookies();
-    const authCookies = getAuthCookies(cookieStore);
-
-    if (!authCookies) return null;
+    if (!cookieStore.get("accessToken")) return null;
 
     const response = await api.get("/auth/session", {
-      headers: { Cookie: authCookies },
+      headers: { Cookie: cookieStore.toString() },
     });
-    return response.data || null;
+    return response;
   } catch {
     return null;
   }
@@ -42,20 +39,20 @@ export async function checkSession(): Promise<User | null> {
 
 export async function fetchNoteById(id: string): Promise<Note> {
   const cookieStore = await cookies();
-  const authCookies = getAuthCookies(cookieStore);
-
   const response = await api.get(`/notes/${id}`, {
-    headers: authCookies ? { Cookie: authCookies } : {},
+    headers: {
+      Cookie: cookieStore.toString(),
+    },
   });
   return response.data;
 }
 
 export async function getMe(): Promise<User> {
   const cookieStore = await cookies();
-  const authCookies = getAuthCookies(cookieStore);
-
   const response = await api.get("/users/me", {
-    headers: authCookies ? { Cookie: authCookies } : {},
+    headers: {
+      Cookie: cookieStore.toString(),
+    },
   });
   return response.data;
 }
