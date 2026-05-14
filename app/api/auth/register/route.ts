@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
         : [setCookieHeader];
       for (const cookieStr of cookieStrings) {
         const parsed = parse(cookieStr);
-        const name = Object.keys(parsed)[0];
-        const value = parsed[name];
+        const name = Object.keys(parsed)[0]; // Get the first cookie name
+        const value = parsed[name]; // Get the value for that cookie
 
         if (name && value !== undefined) {
           cookieStore.set(name, value, {

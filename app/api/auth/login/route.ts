@@ -10,10 +10,6 @@ export async function POST(request: NextRequest) {
     const response = await api.post("/auth/login", body);
 
     const setCookieHeader = response.headers["set-cookie"];
-    if (!setCookieHeader) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
     const cookieStore = await cookies();
     const cookieStrings = Array.isArray(setCookieHeader)
       ? setCookieHeader
@@ -21,8 +17,8 @@ export async function POST(request: NextRequest) {
 
     for (const cookieStr of cookieStrings) {
       const parsed = parse(cookieStr);
-      const name = Object.keys(parsed)[0];
-      const value = parsed[name];
+      const name = Object.keys(parsed)[0]; // Get the first cookie name
+      const value = parsed[name]; // Get the value for that cookie
 
       if (name && value !== undefined) {
         cookieStore.set(name, value, {
