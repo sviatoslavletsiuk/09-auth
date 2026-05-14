@@ -6,3 +6,14 @@ export const api = axios.create({
   baseURL,
   withCredentials: true,
 });
+
+export const logErrorResponse = (error: unknown) => {
+  if (axios.isAxiosError(error)) {
+    console.error("API Error Response:", {
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+  } else {
+    console.error("Unexpected Error:", error);
+  }
+};

@@ -1,4 +1,4 @@
-import { api } from "@/lib/api/backendApi";
+import { api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAxiosError } from "axios";
@@ -16,8 +16,9 @@ export async function POST(_request: NextRequest) {
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
 
-    return NextResponse.json(response.data, { status: response.status });
+    return NextResponse.json(response.data);
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || error.message },

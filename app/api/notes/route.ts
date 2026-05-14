@@ -1,4 +1,4 @@
-import { api } from "@/lib/api/backendApi";
+import { api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAxiosError } from "axios";
@@ -15,17 +15,23 @@ export async function GET(request: NextRequest) {
     const rawTag = searchParams.get("tag") || "";
     const tag = rawTag === "All" ? "" : rawTag;
 
-    const cookieStore = await cookies();
+    const params: Record<string, any> = {
+      page: Number(page),
+      perPage,
+    };
 
+    if (search) params.search = search;
+    if (tag) params.tag = tag;
+
+    const cookieStore = await cookies();
     const response = await api.get("/notes", {
-      params: { search, page, perPage, tag },
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
+      params,
+      headers: { Cookie: cookieStore.toString() },
     });
 
-    return NextResponse.json(response.data, { status: response.status });
+    return NextResponse.json(response.data);
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || error.message },
@@ -46,12 +52,14 @@ export async function POST(request: NextRequest) {
 
     const response = await api.post("/notes", body, {
       headers: {
+        "Content-Type": "application/json",
         Cookie: cookieStore.toString(),
       },
     });
 
-    return NextResponse.json(response.data, { status: response.status });
+    return NextResponse.json(response.data);
   } catch (error) {
+    logErrorResponse(error);
     if (isAxiosError(error)) {
       return NextResponse.json(
         { message: error.response?.data?.message || error.message },
