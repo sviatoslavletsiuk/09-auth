@@ -10,24 +10,26 @@ export async function POST(request: NextRequest) {
     const response = await api.post("/auth/login", body);
 
     const setCookieHeader = response.headers["set-cookie"];
-    const cookieStore = await cookies();
-    const cookieStrings = Array.isArray(setCookieHeader)
-      ? setCookieHeader
-      : [setCookieHeader];
+    if (setCookieHeader) {
+      const cookieStore = await cookies();
+      const cookieStrings = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : [setCookieHeader];
 
-    for (const cookieStr of cookieStrings) {
-      const parsed = parse(cookieStr);
-      const name = Object.keys(parsed)[0]; // Get the first cookie name
-      const value = parsed[name]; // Get the value for that cookie
+      for (const cookieStr of cookieStrings) {
+        const parsed = parse(cookieStr);
+        const entry = Object.entries(parsed)[0];
 
-      if (name && value !== undefined) {
-        cookieStore.set(name, value, {
-          path: parsed.Path,
-          expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-          maxAge: parsed["Max-Age"]
-            ? parseInt(parsed["Max-Age"], 10)
-            : undefined,
-        });
+        if (entry) {
+          const [name, value] = entry;
+          cookieStore.set(name, value ?? "", {
+            path: parsed.Path,
+            expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
+            maxAge: parsed["Max-Age"]
+              ? parseInt(parsed["Max-Age"], 10)
+              : undefined,
+          });
+        }
       }
     }
 
