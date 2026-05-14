@@ -9,7 +9,7 @@ export async function fetchNotes(
   page: number,
   perPage: number,
   tag: string,
-): Promise<{ notes: Note[]; totalPages: number }> {
+): Promise<Note[]> {
   const cookieStore = await cookies();
 
   const backendTag = tag.toLowerCase() === "all" ? "" : tag;
