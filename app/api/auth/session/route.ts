@@ -27,12 +27,12 @@ export async function GET(_request: NextRequest) {
         : [setCookieHeader];
 
       for (const cookieStr of cookieStrings) {
-        const parsed = parse(cookieStr);
+        const parsed = parse(cookieStr ?? "");
         const entries = Object.entries(parsed);
 
         if (entries.length > 0) {
           const [name, value] = entries[0];
-          cookieStore.set(name, value, {
+          cookieStore.set(name, value ?? "", {
             path: parsed.Path,
             expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
             maxAge: parsed["Max-Age"]
