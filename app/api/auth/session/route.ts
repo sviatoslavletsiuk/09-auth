@@ -2,82 +2,46 @@ import { api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAxiosError } from "axios";
+import { parse } from "cookie";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const { id } = params;
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    const response = await api.get(`/notes/${id}`, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
-    });
-
-    return NextResponse.json(response.data);
-  } catch (error) {
-    logErrorResponse(error);
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 },
-      );
+    if (!accessToken || !refreshToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 500 },
-    );
-  }
-}
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  try {
-    const body = await request.json();
-    const cookieStore = await cookies();
-    const { id } = params;
-
-    const response = await api.patch(`/notes/${id}`, body, {
+    const response = await api.get("/auth/session", {
       headers: {
-        "Content-Type": "application/json",
         Cookie: cookieStore.toString(),
       },
     });
 
-    return NextResponse.json(response.data);
-  } catch (error) {
-    logErrorResponse(error);
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 },
-      );
+    const setCookieHeader = response.headers["set-cookie"];
+    if (setCookieHeader) {
+      const cookieStrings = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : [setCookieHeader];
+
+      for (const cookieStr of cookieStrings) {
+        const parsed = parse(cookieStr);
+        const name = Object.keys(parsed)[0];
+        const value = parsed[name];
+
+        if (name && value !== undefined) {
+          cookieStore.set(name, value, {
+            path: parsed.Path,
+            expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
+            maxAge: parsed["Max-Age"]
+              ? parseInt(parsed["Max-Age"], 10)
+              : undefined,
+          });
+        }
+      }
     }
-    return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  try {
-    const cookieStore = await cookies();
-    const { id } = params;
-
-    const response = await api.delete(`/notes/${id}`, {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
-    });
 
     return NextResponse.json(response.data);
   } catch (error) {
