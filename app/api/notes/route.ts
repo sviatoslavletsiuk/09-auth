@@ -1,10 +1,6 @@
-import { api } from "@/lib/api/api";
-import { logErrorResponse } from "@/lib/api/backendApi";
+import { backendApi as api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
-
-export const dynamic = "force-dynamic";
 
 function getQueryValue(url: URL, key: string) {
   const value = url.searchParams.get(key);
@@ -17,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const search = getQueryValue(url, "search") ?? "";
     const page = Number(getQueryValue(url, "page") ?? "1");
-    const perPage = Number(getQueryValue(url, "perPage") ?? "10");
+    const perPage = Number(getQueryValue(url, "perPage") ?? "12");
 
     // В референсі: special logic для tag === 'All'
     // Якщо tag === 'All' — параметр tag передаємо порожнім значенням.
@@ -40,21 +36,11 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error) {
-    logErrorResponse(error);
-
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        {
-          message: error.response?.data?.message || "Failed to fetch notes",
-        },
-        { status: error.response?.status || 500 },
-      );
-    }
-
+  } catch (error: any) {
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
+      { error: error.message, response: error.response?.data },
+      { status: error.status || 500 },
     );
   }
 }
@@ -67,25 +53,16 @@ export async function POST(request: NextRequest) {
 
     const response = await api.post("/notes", body, {
       headers: {
-        "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
     });
 
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error) {
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        {
-          message: error.response?.data?.message || "Failed to create note",
-        },
-        { status: error.response?.status || 500 },
-      );
-    }
-
+  } catch (error: any) {
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
+      { error: error.message, response: error.response?.data },
+      { status: error.status || 500 },
     );
   }
 }

@@ -1,36 +1,23 @@
-import { api } from "@/lib/api/api";
+import { backendApi as api, logErrorResponse } from "@/lib/api/backendApi";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
-import { logErrorResponse } from "@/lib/api/backendApi";
-
-export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
+    const cookieStore = await cookies();
     const response = await api.post("/auth/logout", null, {
-      headers: {
-        Cookie: request.headers.get("cookie") ?? "",
-      },
+      headers: { Cookie: cookieStore.toString() },
     });
 
-    const cookieStore = await cookies();
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
 
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error) {
-    logErrorResponse(error);
-
-    if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || "Logout failed" },
-        { status: error.response?.status || 500 },
-      );
-    }
+  } catch (error: any) {
+    logErrorResponse(error.response?.data || error.message);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 },
+      { error: error.message, response: error.response?.data },
+      { status: error.status || 500 },
     );
   }
 }

@@ -1,63 +1,42 @@
 import { cookies } from "next/headers";
+import { Note } from "@/types/note";
+import { backendApi as api } from "@/lib/api/backendApi";
+import { User } from "@/types/user";
 
 export async function fetchNotes(
   search: string,
   page: number,
   perPage: number,
   tag: string,
-) {
+): Promise<{ notes: Note[]; totalPages: number }> {
   const cookieHeader = (await cookies()).toString();
-  const params = new URLSearchParams({
-    search,
-    page: page.toString(),
-    perPage: perPage.toString(),
-    tag,
+  const response = await api.get("/notes", {
+    params: { search, page, perPage, tag },
+    headers: { Cookie: cookieHeader },
   });
-  const targetUrl = `https://notehub-api.goit.study/notes?${params.toString()}`;
-
-  const response = await fetch(targetUrl, {
-    headers: {
-      Cookie: cookieHeader,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch notes: ${response.status}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
-export async function fetchNoteById(id: string) {
+export async function fetchNoteById(id: string): Promise<Note> {
   const cookieHeader = (await cookies()).toString();
-  const targetUrl = `https://notehub-api.goit.study/notes/${id}`;
-
-  const response = await fetch(targetUrl, {
-    headers: {
-      Cookie: cookieHeader,
-    },
+  const response = await api.get(`/notes/${id}`, {
+    headers: { Cookie: cookieHeader },
   });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch note: ${response.status}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
-export async function getMe() {
+export async function getMe(): Promise<User> {
   const cookieHeader = (await cookies()).toString();
-  const targetUrl = "https://notehub-api.goit.study/users/me";
-
-  const response = await fetch(targetUrl, {
-    headers: {
-      Cookie: cookieHeader,
-    },
+  const response = await api.get("/users/me", {
+    headers: { Cookie: cookieHeader },
   });
+  return response.data;
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch user: ${response.status}`);
-  }
-
-  return response.json();
+export async function checkSession(): Promise<User> {
+  const cookieHeader = (await cookies()).toString();
+  const response = await api.get("/auth/session", {
+    headers: { Cookie: cookieHeader },
+  });
+  return response.data;
 }
