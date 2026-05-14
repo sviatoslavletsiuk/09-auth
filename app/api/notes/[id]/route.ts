@@ -1,4 +1,4 @@
-import { api, logErrorResponse } from "@/lib/api/backendApi";
+import { api, logErrorResponse } from "@/lib/api/backendApi"; // Усунено помилковий імпорт getAuthCookies
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { isAxiosError } from "axios";

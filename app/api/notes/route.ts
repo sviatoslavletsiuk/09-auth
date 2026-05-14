@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const searchParams = url.searchParams;
 
     const search = searchParams.get("search") || "";
-    const page = searchParams.get("page") || "1";
+    const page = Number(searchParams.get("page")) || 1;
     const perPage = 12; // Фіксовано 12 згідно з фідбеком
 
     const rawTag = searchParams.get("tag") || "";
@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       perPage,
     };
 
-    if (search) params.search = search;
-    if (tag) params.tag = tag;
+    if (search.trim()) params.search = search;
+    if (tag.trim()) params.tag = tag;
 
     const cookieStore = await cookies();
     const response = await api.get("/notes", {

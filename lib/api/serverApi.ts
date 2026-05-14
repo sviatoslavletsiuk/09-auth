@@ -15,7 +15,7 @@ export async function fetchNotes(
   const backendTag = tag.toLowerCase() === "all" ? "" : tag;
 
   const response = await api.get("/notes", {
-    params: { search, page, perPage: 12, tag: backendTag },
+    params: { search, page, perPage, tag: backendTag },
     headers: {
       Cookie: cookieStore.toString(),
     },

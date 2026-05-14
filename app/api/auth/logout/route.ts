@@ -13,6 +13,13 @@ export async function POST(_request: NextRequest) {
       },
     });
 
+    if (response.status !== 200) {
+      return NextResponse.json(
+        { message: "Logout failed" },
+        { status: response.status },
+      );
+    }
+
     cookieStore.delete("accessToken");
     cookieStore.delete("refreshToken");
 
