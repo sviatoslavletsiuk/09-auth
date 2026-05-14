@@ -30,9 +30,7 @@ export async function GET(request: NextRequest) {
 
     const response = await api.get("/notes", {
       params: Object.fromEntries(params.entries()),
-      headers: {
-        Cookie: cookieHeader,
-      },
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
 
     return NextResponse.json(response.data, { status: response.status });
@@ -40,7 +38,7 @@ export async function GET(request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.status || 500 },
+      { status: error.response?.status || error.status || 500 },
     );
   }
 }
@@ -52,9 +50,7 @@ export async function POST(request: NextRequest) {
     const cookieHeader = (await cookies()).toString();
 
     const response = await api.post("/notes", body, {
-      headers: {
-        Cookie: cookieHeader,
-      },
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
 
     return NextResponse.json(response.data, { status: response.status });
@@ -62,7 +58,7 @@ export async function POST(request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.status || 500 },
+      { status: error.response?.status || error.status || 500 },
     );
   }
 }

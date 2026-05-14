@@ -5,8 +5,10 @@ import { cookies } from "next/headers";
 export async function POST(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    const cookieHeader = cookieStore.toString();
+
     const response = await api.post("/auth/logout", null, {
-      headers: { Cookie: cookieStore.toString() },
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
 
     cookieStore.delete("accessToken");
@@ -17,7 +19,7 @@ export async function POST(_request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.status || 500 },
+      { status: error.response?.status || error.status || 500 },
     );
   }
 }

@@ -6,8 +6,10 @@ import { parse } from "cookie";
 export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    const cookieHeader = cookieStore.toString();
+
     const response = await api.get("/auth/session", {
-      headers: { Cookie: cookieStore.toString() },
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
     });
 
     const setCookieHeader = response.headers["set-cookie"];
@@ -31,7 +33,7 @@ export async function GET(_request: NextRequest) {
     logErrorResponse(error);
     return NextResponse.json(
       { error: error.message, response: error.response?.data },
-      { status: error.status || 401 },
+      { status: error.response?.status || error.status || 401 },
     );
   }
 }

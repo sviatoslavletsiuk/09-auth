@@ -12,7 +12,7 @@ export async function fetchNotes(
   const cookieHeader = (await cookies()).toString();
   const response = await api.get("/notes", {
     params: { search, page, perPage, tag },
-    headers: { Cookie: cookieHeader },
+    headers: cookieHeader ? { Cookie: cookieHeader } : {},
   });
   return response.data;
 }
@@ -20,7 +20,7 @@ export async function fetchNotes(
 export async function checkSession(): Promise<User> {
   const cookieHeader = (await cookies()).toString();
   const response = await api.get("/auth/session", {
-    headers: { Cookie: cookieHeader },
+    headers: cookieHeader ? { Cookie: cookieHeader } : {},
   });
   return response.data;
 }
@@ -28,7 +28,7 @@ export async function checkSession(): Promise<User> {
 export async function fetchNoteById(id: string): Promise<Note> {
   const cookieHeader = (await cookies()).toString();
   const response = await api.get(`/notes/${id}`, {
-    headers: { Cookie: cookieHeader },
+    headers: cookieHeader ? { Cookie: cookieHeader } : {},
   });
   return response.data;
 }
@@ -36,7 +36,7 @@ export async function fetchNoteById(id: string): Promise<Note> {
 export async function getMe(): Promise<User> {
   const cookieHeader = (await cookies()).toString();
   const response = await api.get("/users/me", {
-    headers: { Cookie: cookieHeader },
+    headers: cookieHeader ? { Cookie: cookieHeader } : {},
   });
   return response.data;
 }
