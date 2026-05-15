@@ -1,60 +1,55 @@
-import { api, logErrorResponse } from "@/lib/api/backendApi";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
+import { api } from "../../api";
 import { parse } from "cookie";
+import { isAxiosError } from "axios";
+import { logErrorResponse } from "../../_utils/utils";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
     const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    if (!accessToken || !refreshToken) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (accessToken) {
+      return NextResponse.json({ success: true });
     }
 
-    const response = await api.get("/auth/session", {
-      headers: {
-        Cookie: cookieStore.toString(),
-      },
-    });
+    if (refreshToken) {
+      const apiRes = await api.get("auth/session", {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      });
 
-    const setCookieHeader = response.headers["set-cookie"];
-    if (setCookieHeader) {
-      const cookieStrings = Array.isArray(setCookieHeader)
-        ? setCookieHeader
-        : [setCookieHeader];
+      const setCookie = apiRes.headers["set-cookie"];
 
-      for (const cookieStr of cookieStrings) {
-        const parsed = parse(cookieStr ?? "");
-        const entry = Object.entries(parsed)[0];
+      if (setCookie) {
+        const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+        for (const cookieStr of cookieArray) {
+          const parsed = parse(cookieStr);
 
-        if (entry) {
-          const [name, value] = entry;
-          cookieStore.set(name, value, {
-            path: parsed.Path,
+          const options = {
             expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-            maxAge: parsed["Max-Age"]
-              ? parseInt(parsed["Max-Age"], 10)
-              : undefined,
-          });
+            path: parsed.Path,
+            maxAge: Number(parsed["Max-Age"]),
+          };
+
+          if (parsed.accessToken)
+            cookieStore.set("accessToken", parsed.accessToken, options);
+          if (parsed.refreshToken)
+            cookieStore.set("refreshToken", parsed.refreshToken, options);
         }
+        return NextResponse.json({ success: true }, { status: 200 });
       }
     }
-
-    return NextResponse.json(response.data);
+    return NextResponse.json({ success: false }, { status: 200 });
   } catch (error) {
-    logErrorResponse(error);
     if (isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || error.message },
-        { status: error.response?.status || 500 },
-      );
+      logErrorResponse(error.response?.data);
+      return NextResponse.json({ success: false }, { status: 200 });
     }
-    return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 500 },
-    );
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json({ success: false }, { status: 200 });
   }
 }

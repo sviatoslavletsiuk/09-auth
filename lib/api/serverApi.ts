@@ -1,15 +1,15 @@
 import { cookies } from "next/headers";
-import { Note } from "@/types/note";
+import { Note, NotesResponse } from "@/types/note";
 import { api } from "@/lib/api/backendApi";
 import { User } from "@/types/user";
 import { AxiosResponse } from "axios";
 
 export async function fetchNotes(
-  search: string,
-  page: number,
-  perPage: number,
-  tag: string,
-): Promise<Note[]> {
+  search: string = "",
+  page: number = 1,
+  perPage: number = 12,
+  tag: string = "all",
+): Promise<NotesResponse> {
   const cookieStore = await cookies();
 
   const backendTag = tag.toLowerCase() === "all" ? "" : tag;
